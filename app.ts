@@ -1,38 +1,60 @@
+/* eslint-disable global-require */
 import autoload from "@fastify/autoload";
 import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
 import middie from "@fastify/middie";
 import fastify from "fastify";
-// import { initializeApp } from "firebase/app";
+import admin from "firebase-admin";
+import { getAuth } from "firebase-admin/auth";
 import path from "path";
 
 const startServer = async (port: number) => {
-  //   const firebaseConfig = {
-  //     apiKey: "AIzaSyB0E5t0uZnz6R0PXQuOR7DVx7we2Gb-Gqg",
-  //     authDomain: "jenosize-bc15f.firebaseapp.com",
-  //     projectId: "jenosize-bc15f",
-  //     storageBucket: "jenosize-bc15f.appspot.com",
-  //     messagingSenderId: "77726164123",
-  //     appId: "1:77726164123:web:0a68835f35d4c9fd69523e",
-  //   };
-  //   const app = initializeApp(firebaseConfig);
+  const serviceAccount = require("./public/jenosize-bc15f-firebase-adminsdk-a288x-1237f5f066.json");
+
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+  });
 
   const server = fastify({ logger: true });
-  await server.register(middie);
+  server.register(middie);
   server.register(cors);
   server.register(helmet, { contentSecurityPolicy: false });
-  await server.decorate("authenticate", async (req: any, res: { statusCode: number }) => {
-    try {
-      console.log(req);
-      if (false) {
+
+  server.addHook("preHandler", async (req, res) => {
+    const newToken = req.headers.authorization?.split(" ") || [];
+    getAuth()
+      .verifyIdToken(newToken[1])
+      .then((decodedToken) => {
+        console.log(decodedToken);
+      })
+      .catch(() => {
         res.statusCode = 401;
-        throw new Error("401 Unauthorized");
-      }
-    } catch {
-      res.statusCode = 401;
-      throw new Error("401 Unauthorized");
-    }
+      });
+
+    // validate ด้วย uid
+    // getAuth()
+    //   .getUser(String(req.headers["api-key"]))
+    //   .then((userRecord: any) => {
+    //     console.log(`Successfully fetched user data: ${userRecord.toJSON()}`);
+    //   })
+    //   .catch(() => {
+    //     res.statusCode = 401;
+    //   });
   });
+
+  // ใช้งานไม่ได้
+  // server.decorate("authenticate", async (req: any, res: { statusCode: number }) => {
+  //   try {
+  //     console.log(req);
+  //     if (false) {
+  //       res.statusCode = 401;
+  //       throw new Error("401 Unauthorized");
+  //     }
+  //   } catch {
+  //     res.statusCode = 401;
+  //     throw new Error("401 Unauthorized");
+  //   }
+  // });
   server.register(autoload, {
     dir: path.join(__dirname, "controller"),
   });

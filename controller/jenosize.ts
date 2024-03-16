@@ -2,29 +2,17 @@
 /* eslint-disable no-restricted-syntax */
 import axios from "axios";
 import type { FastifyInstance } from "fastify";
-// import { initializeApp } from "firebase/app";
-// import { getAuth } from "firebase/auth";
 
 const googleMapKey = "AIzaSyAIFLj2onkl1L4CufB1-PsLA-F47S_3-Nk";
 
-// const firebaseConfig = {
-//   apiKey: "AIzaSyB0E5t0uZnz6R0PXQuOR7DVx7we2Gb-Gqg",
-//   authDomain: "jenosize-bc15f.firebaseapp.com",
-//   projectId: "jenosize-bc15f",
-//   storageBucket: "jenosize-bc15f.appspot.com",
-//   messagingSenderId: "77726164123",
-//   appId: "1:77726164123:web:0a68835f35d4c9fd69523e",
-// };
-// const app = initializeApp(firebaseConfig);
 export default async (fastify: FastifyInstance) => {
   fastify.post<{ Body: { search: string } }>(
     "/search",
     {
       schema: {
-        // headers: { Authorization: { type: "string" } },
+        headers: { Authorization: { type: "string" }, "api-key": { type: "string" } },
         body: { type: "object", properties: { search: { type: "string" } } },
       },
-      // preValidation: fastify.authenticate,
     },
     async (req) => {
       const { search } = req.body;
@@ -36,11 +24,20 @@ export default async (fastify: FastifyInstance) => {
           "User-Agent": "Thunder Client (https://www.thunderclient.com)",
           "Content-Type": "application/json",
           "X-Goog-Api-Key": googleMapKey,
-          "X-Goog-FieldMask": "places.location,places.displayName,places.formattedAddress,places.priceLevel",
+          "X-Goog-FieldMask": "places.displayName,places.nationalPhoneNumber,places.formattedAddress,places.photos",
         },
         data: { textQuery: search, includedType: "restaurant", languageCode: "th" },
       });
-      return axiosGoogleService.data;
+      const restaurantData = axiosGoogleService.data.places.map((e: any) => {
+        const spliteImg = e.photos[0].name.split("/");
+        return {
+          name: e.displayName.text,
+          phoneNumber: e.nationalPhoneNumber,
+          address: e.formattedAddress,
+          imgName: spliteImg[3],
+        };
+      });
+      return restaurantData;
     },
   );
 
@@ -48,7 +45,7 @@ export default async (fastify: FastifyInstance) => {
     "/game24",
     {
       schema: {
-        // headers: { Authorization: { type: "string" } },
+        headers: { Authorization: { type: "string" }, "api-key": { type: "string" } },
         body: {
           type: "object",
           properties: {
@@ -56,7 +53,6 @@ export default async (fastify: FastifyInstance) => {
           },
         },
       },
-      // preValidation: fastify.authenticate,
     },
     async (req) => {
       const { setNumbers } = req.body;
@@ -74,18 +70,19 @@ export default async (fastify: FastifyInstance) => {
 
       const comboNumber = [] as string[];
       const convert = setNumbers.map((e) => String(e));
-      for (const one of convert) {
-        const textone = one;
-        for (const two of convert) {
-          const texttwo = textone + two;
-          for (const three of convert) {
-            const textthree = texttwo + three;
-            for (const four of convert) {
-              comboNumber.push(textthree + four);
-            }
-          }
-        }
-      }
+      convert.forEach((textOne, indexOne) => {
+        const arrayLoopOne = setNumbers.map((e) => String(e));
+        arrayLoopOne.splice(indexOne, 1);
+        arrayLoopOne.forEach((textTwo, indexTwo) => {
+          const arrayLoopTwo = arrayLoopOne.map((e) => String(e));
+          arrayLoopTwo.splice(indexTwo, 1);
+          arrayLoopTwo.forEach((textThree, indexThree) => {
+            const arrayLoopThree = arrayLoopTwo.map((e) => String(e));
+            arrayLoopThree.splice(indexThree, 1);
+            comboNumber.push(textOne + textTwo + textThree + arrayLoopThree[0]);
+          });
+        });
+      });
 
       const comboFull = [] as string[];
       for (const one of comboNumber) {
@@ -101,7 +98,7 @@ export default async (fastify: FastifyInstance) => {
       });
 
       for (const e of arrayCombo) {
-        console.log(eval(e));
+        // console.log(eval(e));
         const cal = eval(e) as number;
         if (cal === 24) return "YES";
       }
@@ -118,7 +115,7 @@ export default async (fastify: FastifyInstance) => {
     "/xo",
     {
       schema: {
-        // headers: { Authorization: { type: "string" } },
+        headers: { Authorization: { type: "string" }, "api-key": { type: "string" } },
         body: {
           type: "object",
           properties: {
@@ -128,7 +125,6 @@ export default async (fastify: FastifyInstance) => {
           },
         },
       },
-      // preValidation: fastify.authenticate,
     },
     async (req) => {
       // รูปแบบที่สามารถชนะได้
