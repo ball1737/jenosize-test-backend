@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /* eslint-disable global-require */
 import autoload from "@fastify/autoload";
 import cors from "@fastify/cors";
@@ -21,9 +22,8 @@ const startServer = async (port: number) => {
   server.register(helmet, { contentSecurityPolicy: false });
 
   server.addHook("preHandler", async (req, res) => {
-    const newToken = req.headers.authorization?.split(" ") || [];
     getAuth()
-      .verifyIdToken(newToken[1])
+      .verifyIdToken(String(req.headers["api-key"]))
       .then((decodedToken) => {
         console.log(decodedToken);
       })
@@ -55,6 +55,7 @@ const startServer = async (port: number) => {
   //     throw new Error("401 Unauthorized");
   //   }
   // });
+
   server.register(autoload, {
     dir: path.join(__dirname, "controller"),
   });

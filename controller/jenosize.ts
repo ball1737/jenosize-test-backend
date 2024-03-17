@@ -107,10 +107,6 @@ export default async (fastify: FastifyInstance) => {
     },
   );
 
-  fastify.post("/login", {}, async () => {
-    return "login";
-  });
-
   fastify.post<{ Body: { x: number[]; o: number[]; free: number[] } }>(
     "/xo",
     {
@@ -141,7 +137,7 @@ export default async (fastify: FastifyInstance) => {
 
       const { x, o, free } = req.body;
       let win = { player: "", match: [] } as { player: string; match: number[] }; // ตัวแปรสำหรับเก็บผู้ชนะ
-      let almostWinRemain = 3 as number; // ตัวแปรสำหรับเก็บผู้ที่ใกล้ชนะ
+      let almostWinRemain = 3 as number; // ตัวแปรสำหรับเก็บจำนวนช่องที่ลงแล้วจะชนะ plattern
 
       // เช็ค o ก่อนว่ามีรูปแบบที่จะชนะไหม
       const checko = winPlattern.map((array) => {
