@@ -8,7 +8,7 @@
   },
   "include": [
     "**/*.ts",
-    "**/*.d.ts",
+    "**/*.d.ts", "api/serverless.js",
   ],
   "exclude": [
     "node_modules"
